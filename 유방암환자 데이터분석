@@ -75,8 +75,8 @@ pairs(cancel[trainD, -3],
       main = "Pairs of train data (excluding HDI_Category)")
 
 # (2) adabag 객체(gdis)에 대해 pairs 함수를 적용하려면,
-#    newdata 인자에 예측할 입력(독립변수들)을 넣어줄 수 있습니다.
-#    아래는 예시로 '테스트 데이터 독립변수'를 넣어 그릴 수 있습니다.
+#    newdata 인자에 예측할 입력(독립변수들)을 넣어줄 수 있다.
+#    아래는 예시로 '테스트 데이터 독립변수'를 넣어 그릴 수 있다.
 pairs(gdis, newdata = cancel[testD, -3],
       newdata.labels = cancel[testD, 3],
       main = "Pairs plot using gdis object + test data")
