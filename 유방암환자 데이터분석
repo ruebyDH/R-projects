@@ -1,0 +1,37 @@
+#유방암환자의  HDI_CATEGORY 분류를 진행. 
+
+cancel=read.csv("Breast_Cancer_Global_Dataset.csv")
+cancel
+attach(cancel)
+str(cancel)
+HDI_Category
+# 예제3) 
+# Breat cancel의 HDI 카테고리 분류
+# adabag 패키지의 ada()
+cancel
+# 데이터분할 (6:4)
+n <- dim(cancel)[1]
+n
+#전에 이부분 기말출제(반드시 기억)
+trainD <- sample(1:n, floor(0.6*n), FALSE)
+testD <- setdiff(1:n, trainD)
+
+library(adabag)
+adabag_model <- boosting(
+  formula = HDI_Category ~ .,
+  data = cancel[trainD, ],
+  mfinal = 20  # 반복 횟수
+)
+adabag_model
+gdis <- addtest(gdis, 
+                cancel[testD,-3],
+                cancel[testD,3])
+gdis
+# 그래프
+plot(gdis)
+plot(gdis, T)  
+plot(gdis, TRUE, T)    
+plot(gdis, F, T)    
+varplot(gdis)
+pairs(gdis, iris[trainD,-5])  
+  
