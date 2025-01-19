@@ -1,38 +1,82 @@
 #kaggle의 데이터를 이용하여 유방암환자 데이터를 다운로드함.
 #유방암환자의  HDI_CATEGORY 분류를 adabag패키지의 boosting을 이용하여 진행하였음. 
 
-cancel=read.csv("Breast_Cancer_Global_Dataset.csv")
-cancel
-attach(cancel)
-str(cancel)
-HDI_Category
-# 예제3) 
-# Breat cancel의 HDI 카테고리 분류
-# adabag 패키지의 ada()
-cancel
-# 데이터분할 (6:4)
-n <- dim(cancel)[1]
-n
-#전에 이부분 기말출제(반드시 기억)
-trainD <- sample(1:n, floor(0.6*n), FALSE)
-testD <- setdiff(1:n, trainD)
+# 작업 경로 확인(선택 사항)
+getwd()
 
+# ----------------------
+# 1. 데이터 불러오기
+# ----------------------
+cancel <- read.csv("Breast_Cancer_Global_Dataset.csv")  # CSV 파일 읽기
+attach(cancel)
+
+# 데이터 구조 확인(선택 사항)
+str(cancel)       
+table(HDI_Category)  # 범주 분포 확인
+
+# ----------------------
+# 2. 훈련/테스트 데이터 분할
+# ----------------------
+n <- nrow(cancel)
+set.seed(123)  # 샘플링 시드 고정(결과 재현성을 위해)
+trainD <- sample(1:n, floor(0.6 * n), replace = FALSE)
+testD  <- setdiff(1:n, trainD)
+trainD
+testD
+# ----------------------
+# 3. adabag 패키지 로드 & 모델 학습
+# ----------------------
 library(adabag)
-adabag_model <- boosting(
+
+# adabag::boosting() 실행 (mfinal=반복 횟수)
+gdis <- boosting(
   formula = HDI_Category ~ .,
-  data = cancel[trainD, ],
-  mfinal = 20  # 반복 횟수
+  data    = cancel[trainD, ],
+  mfinal  = 20  
 )
-adabag_model
-gdis <- addtest(gdis, 
-                cancel[testD,-3],
-                cancel[testD,3])
+
+# 결과 요약
 gdis
-# 그래프
-plot(gdis)
-plot(gdis, T)  
-plot(gdis, TRUE, T)    
-plot(gdis, F, T)    
+summary(gdis)
+
+cancel
+# ----------------------
+# 4. 테스트 데이터 평가 정보 추가
+# ----------------------
+# addtest(학습된부스팅객체, 테스트_독립변수, 테스트_종속변수)
+gdis <- addtest(
+  gdis, 
+  cancel[testD, -3],  # HDI_Category(3번째 열) 제외
+  cancel[testD,  3]   # 실제 레이블
+)
+
+# 테스트 결과 포함된 객체 확인
+gdis
+
+# ----------------------
+# 5. 시각화
+# ----------------------
+# 1) 모델 정확도 추이 등의 기본 플롯
+plot(gdis)                        # 기본
+plot(gdis, main = "Plot(gdis)")   # 타이틀 추가
+
+# 2) 테스트 세트에 대한 내용 포함 플롯
+plot(gdis, test = TRUE, main = "Plot with test data")
+
+# 3) 변수 중요도(Variable Importance) 플롯
 varplot(gdis)
-pairs(gdis, iris[trainD,-5])  
-  
+
+# ----------------------
+# 6. pairs() 예시
+# ----------------------
+# (1) 단순히 훈련 데이터 산점도 행렬을 보고 싶다면:
+pairs(cancel[trainD, -3],
+      col  = cancel[trainD, 3],
+      main = "Pairs of train data (excluding HDI_Category)")
+
+# (2) adabag 객체(gdis)에 대해 pairs 함수를 적용하려면,
+#    newdata 인자에 예측할 입력(독립변수들)을 넣어줄 수 있습니다.
+#    아래는 예시로 '테스트 데이터 독립변수'를 넣어 그릴 수 있습니다.
+pairs(gdis, newdata = cancel[testD, -3],
+      newdata.labels = cancel[testD, 3],
+      main = "Pairs plot using gdis object + test data")
