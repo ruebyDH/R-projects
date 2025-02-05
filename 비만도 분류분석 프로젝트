@@ -1,0 +1,68 @@
+# 작업 경로 확인(선택 사항)
+getwd()
+
+# ----------------------
+# 1. 데이터 불러오기
+# ----------------------
+ob <- read.csv("Obesity prediction.csv",stringsAsFactors = T)  # CSV 파일 읽기
+attach(ob)
+
+# 데이터 구조 확인(선택 사항)
+str(ob)       
+table(Obesity)  # 범주 분포 확인
+Obesity
+# ----------------------
+# 2. 훈련/테스트 데이터 분할
+# ----------------------
+n <- nrow(ob)
+set.seed(123)  # 샘플링 시드 고정(결과 재현성을 위해)
+train_idx <- sample(1:n, floor(0.6 * n), replace = FALSE)
+test_idx  <- setdiff(1:n, train_idx)
+trainD <- ob[train_idx, ]  # 훈련 데이터셋
+testD  <- ob[test_idx, ]   # 테스트 데이터셋
+trainD
+testD
+#kknn 함수의 kknn패키지를 이용한 knn분류
+library(kknn)
+ob_kknn=kknn(Obesity~.,trainD,testD,distance = 2,kernel = "triangular")
+#iris.kknn2=kknn(HDI_Category~.,trainD,testD,distance = 2)
+
+#iris.kknn
+summary(ob_kknn)
+
+ob_kknn$fitted.values
+fit=fitted(ob_kknn)
+fit
+
+
+table(fit,testD[,"Obesity"])
+library(caret)
+library(ggplot2)
+conf_mat=confusionMatrix(fit,testD$Obesity)
+library(caret)
+library(ggplot2)
+
+# 혼동 행렬 계산
+conf_mat <- confusionMatrix(fit, testD$Obesity)
+conf_mat
+
+
+
+#추가:비만도에 영향을 끼치는 변수를 찾기위한 다중로지스틱회귀분석 진행
+#분석실시 
+#기본모형
+library(nnet)
+ob_fit_multinom=multinom(Obesity~.,data = trainD)
+
+summary(ob_fit_multinom)
+# 예측
+predicted_obesity <- predict(ob_fit_multinom, newdata = testD)
+
+# 예측된 값 확인
+head(predicted_obesity)
+# confusionMatrix 함수 사용
+library(caret)
+conf_matrix <- confusionMatrix(predicted_obesity, testD$Obesity)
+
+# 혼동 행렬 출력
+print(conf_matrix)
